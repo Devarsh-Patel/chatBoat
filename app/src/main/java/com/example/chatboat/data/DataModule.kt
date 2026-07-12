@@ -2,8 +2,7 @@ package com.example.chatboat.data
 
 import android.content.Context
 import com.example.chatboat.data.local.ChatDatabase
-import com.example.chatboat.data.remote.AuthApiService
-import com.example.chatboat.data.remote.GeminiApiService
+import com.example.chatboat.data.remote.BackendApiService
 import com.example.chatboat.data.repository.ChatRepository
 import com.example.chatboat.data.auth.AuthRepository
 import kotlinx.serialization.json.Json
@@ -28,33 +27,23 @@ object DataModule {
             .build()
     }
 
-    private fun provideGeminiApiService(): GeminiApiService {
+    private fun provideBackendApiService(): BackendApiService {
         val contentType = "application/json".toMediaType()
+        // Replace this with your REAL backend URL (e.g., http://10.0.2.2:3000 for local emulator)
         return Retrofit.Builder()
-            .baseUrl("https://generativelanguage.googleapis.com/")
+            .baseUrl("http://10.0.2.2:3000/") 
             .client(provideOkHttpClient())
             .addConverterFactory(json.asConverterFactory(contentType))
             .build()
-            .create(GeminiApiService::class.java)
-    }
-
-    private fun provideAuthApiService(): AuthApiService {
-        val contentType = "application/json".toMediaType()
-        // Replace this with your REAL backend URL
-        return Retrofit.Builder()
-            .baseUrl("https://your-backend-api.com/") 
-            .client(provideOkHttpClient())
-            .addConverterFactory(json.asConverterFactory(contentType))
-            .build()
-            .create(AuthApiService::class.java)
+            .create(BackendApiService::class.java)
     }
 
     fun provideChatRepository(context: Context): ChatRepository {
         val database = ChatDatabase.getDatabase(context)
-        return ChatRepository(database.chatDao(), provideGeminiApiService())
+        return ChatRepository(database.chatDao(), provideBackendApiService())
     }
 
     fun provideAuthRepository(): AuthRepository {
-        return AuthRepository(provideAuthApiService())
+        return AuthRepository(provideBackendApiService())
     }
 }
