@@ -1,124 +1,283 @@
 package com.example.chatboat.ui.auth
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AccountCircle
-import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.Chat
-import androidx.compose.material.icons.rounded.Email
-import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material.icons.rounded.Phone
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.chatboat.ui.theme.ChatBoatTheme
+import com.example.chatboat.data.auth.AuthProvider
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AuthScreen(
+    viewModel: AuthViewModel,
     onAuthenticated: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val error by viewModel.error.collectAsState()
+
+    LaunchedEffect(uiState) {
+        if (uiState is AuthUiState.Success) {
+            onAuthenticated()
+        }
+    }
+
+    BackHandler(enabled = uiState !is AuthUiState.Landing) {
+        viewModel.goBack()
+    }
+
     Scaffold(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize(),
+        topBar = {
+            if (uiState !is AuthUiState.Landing) {
+                TopAppBar(
+                    title = { },
+                    navigationIcon = {
+                        IconButton(onClick = { viewModel.goBack() }) {
+                            Icon(imageVector = Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                        }
+                    }
+                )
+            }
+        }
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
         ) {
-            Icon(
-                imageVector = Icons.Rounded.AutoAwesome,
-                contentDescription = null,
-                modifier = Modifier.size(120.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Text(
-                text = "chatBoat",
-                style = MaterialTheme.typography.displayMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-
-            Text(
-                text = "Your AI Search Companion",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(48.dp))
-
-            AuthButton(
-                text = "Continue with Google",
-                icon = Icons.Rounded.Email, 
-                onClick = onAuthenticated,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            AuthButton(
-                text = "Continue with Apple",
-                icon = Icons.Rounded.Lock,
-                onClick = onAuthenticated,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            OutlinedButton(
-                onClick = onAuthenticated,
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.extraLarge,
-                contentPadding = ButtonDefaults.ContentPadding
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Icon(imageVector = Icons.Rounded.Phone, contentDescription = null)
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(text = "Guest / Phone Login", style = MaterialTheme.typography.labelLarge)
+            AnimatedContent(
+                targetState = uiState,
+                label = "AuthFlow"
+            ) { state ->
+                when (state) {
+                    is AuthUiState.Landing -> LandingContent(
+                        onProviderSelect = { viewModel.selectProvider(it) }
+                    )
+                    is AuthUiState.InputIdentifier -> InputIdentifierContent(
+                        provider = state.provider,
+                        isLoading = isLoading,
+                        error = error,
+                        onSubmit = { viewModel.requestVerificationCode(it) }
+                    )
+                    is AuthUiState.Verification -> VerificationContent(
+                        provider = state.provider,
+                        identifier = state.identifier,
+                        isLoading = isLoading,
+                        error = error,
+                        onVerify = { viewModel.verifyCode(it) }
+                    )
+                    else -> Box(modifier = Modifier.fillMaxSize())
                 }
             }
+            
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+        }
+    }
+}
 
-            Spacer(modifier = Modifier.height(24.dp))
+@Composable
+fun LandingContent(onProviderSelect: (AuthProvider) -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = Icons.Rounded.AutoAwesome,
+            contentDescription = null,
+            modifier = Modifier.size(120.dp),
+            tint = MaterialTheme.colorScheme.primary
+        )
 
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "chatBoat",
+            style = MaterialTheme.typography.displayMedium,
+            fontWeight = FontWeight.Bold
+        )
+
+        Text(
+            text = "Your AI Search Companion",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(48.dp))
+
+        AuthButton(
+            text = "Continue with Google",
+            icon = Icons.Rounded.Email,
+            onClick = { onProviderSelect(AuthProvider.GOOGLE) },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        AuthButton(
+            text = "Continue with Apple",
+            icon = Icons.Rounded.Lock,
+            onClick = { onProviderSelect(AuthProvider.APPLE) },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedButton(
+            onClick = { onProviderSelect(AuthProvider.PHONE) },
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+            shape = MaterialTheme.shapes.extraLarge
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(imageVector = Icons.Rounded.Phone, contentDescription = null)
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(text = "Guest / Phone Login", style = MaterialTheme.typography.labelLarge)
+            }
+        }
+    }
+}
+
+@Composable
+fun InputIdentifierContent(
+    provider: AuthProvider,
+    isLoading: Boolean,
+    error: String?,
+    onSubmit: (String) -> Unit
+) {
+    var identifier by remember { mutableStateOf("") }
+    
+    val (title, hint, keyboardType) = when (provider) {
+        AuthProvider.GOOGLE -> Triple("Google Login", "Enter your Gmail", KeyboardType.Email)
+        AuthProvider.APPLE -> Triple("Apple Login", "Enter your Apple-connected Email", KeyboardType.Email)
+        AuthProvider.PHONE -> Triple("Phone Login", "Enter your Phone Number", KeyboardType.Phone)
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text = title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "We'll send a verification code to your ${if (provider == AuthProvider.PHONE) "phone" else "email"}.",
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        
+        Spacer(modifier = Modifier.height(32.dp))
+
+        OutlinedTextField(
+            value = identifier,
+            onValueChange = { identifier = it },
+            label = { Text(hint) },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+            isError = error != null,
+            singleLine = true,
+            shape = MaterialTheme.shapes.large
+        )
+
+        if (error != null) {
             Text(
-                text = "By continuing, you agree to our Terms and Privacy Policy.",
+                text = error,
+                color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.outline,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 16.dp)
+                modifier = Modifier.padding(top = 8.dp)
             )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Button(
+            onClick = { onSubmit(identifier) },
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+            enabled = identifier.isNotBlank() && !isLoading,
+            shape = MaterialTheme.shapes.extraLarge
+        ) {
+            Text("Send Code")
+        }
+    }
+}
+
+@Composable
+fun VerificationContent(
+    provider: AuthProvider,
+    identifier: String,
+    isLoading: Boolean,
+    error: String?,
+    onVerify: (String) -> Unit
+) {
+    var code by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text = "Verify your account", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Enter the 6-digit code sent to $identifier",
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        OutlinedTextField(
+            value = code,
+            onValueChange = { if (it.length <= 6) code = it },
+            label = { Text("Verification Code") },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+            isError = error != null,
+            singleLine = true,
+            shape = MaterialTheme.shapes.large
+        )
+
+        if (error != null) {
+            Text(
+                text = error,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Button(
+            onClick = { onVerify(code) },
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+            enabled = code.length == 6 && !isLoading,
+            shape = MaterialTheme.shapes.extraLarge
+        ) {
+            Text("Verify & Continue")
         }
     }
 }
@@ -147,13 +306,5 @@ fun AuthButton(
             Spacer(modifier = Modifier.width(12.dp))
             Text(text = text, style = MaterialTheme.typography.labelLarge)
         }
-    }
-}
-
-@Preview(showBackground = true, device = "spec:width=411dp,height=891dp")
-@Composable
-fun AuthScreenPreview() {
-    ChatBoatTheme {
-        AuthScreen(onAuthenticated = {})
     }
 }

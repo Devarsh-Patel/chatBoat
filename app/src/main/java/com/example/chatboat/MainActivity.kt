@@ -11,7 +11,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import com.example.chatboat.data.auth.AuthRepository
 import com.example.chatboat.ui.auth.AuthScreen
+import com.example.chatboat.ui.auth.AuthViewModel
+import com.example.chatboat.ui.auth.AuthViewModelFactory
 import com.example.chatboat.ui.chat.ChatViewModel
 import com.example.chatboat.ui.chat.ChatViewModelFactory
 import com.example.chatboat.ui.main.MainScreen
@@ -35,6 +38,7 @@ fun ChatBoatApp() {
     val backStack = rememberNavBackStack(NavRoute.Auth)
     val context = LocalContext.current
     val chatViewModel: ChatViewModel = viewModel(factory = ChatViewModelFactory(context))
+    val authViewModel: AuthViewModel = viewModel(factory = AuthViewModelFactory(AuthRepository()))
 
     NavDisplay(
         backStack = backStack,
@@ -43,6 +47,7 @@ fun ChatBoatApp() {
             when (key) {
                 NavRoute.Auth -> NavEntry(key) {
                     AuthScreen(
+                        viewModel = authViewModel,
                         onAuthenticated = dropUnlessResumed {
                             backStack.removeAt(backStack.size - 1)
                             backStack.add(NavRoute.Main)
