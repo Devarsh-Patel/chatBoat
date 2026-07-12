@@ -26,19 +26,21 @@ chatBoat: An AI search engine app with Google and Apple login, and guest login u
 ## Implementation Steps
 
 ### Task_1_AuthAndNavigation: Implement authentication (Google, Apple, Phone) and the main navigation structure using Navigation 3.
-- **Status:** IN_PROGRESS
+- **Status:** COMPLETED
+- **Updates:** Implemented Navigation 3 state-driven framework. Created AuthScreen with Google, Apple, and Phone/Guest login UI. Verified navigation between Auth and Main screens. Project builds successfully with compileSdk 37. Added adaptive app icon.
 - **Acceptance Criteria:**
   - Authentication UI for Google, Apple, and Guest (Phone) is implemented.
   - Navigation 3 state-driven flow between Auth and Main screens is functional.
   - Project builds successfully.
-- **StartTime:** 2026-07-12 12:07:47 IST
+- **Duration:** N/A
 
 ### Task_2_AICoreAndDataLayer: Integrate AI API (e.g., Gemini) and implement local persistence using Room for chat history.
-- **Status:** PENDING
+- **Status:** IN_PROGRESS
 - **Acceptance Criteria:**
   - API_KEY integrated and AI responses are fetched via Retrofit.
   - Room database stores and retrieves chat sessions and messages.
   - App does not crash during data operations.
+- **StartTime:** 2026-07-12 12:30:43 IST
 
 ### Task_3_AdaptiveUIAndM3Theme: Develop the adaptive multi-pane UI for chat and history using Material 3 and Edge-to-Edge display.
 - **Status:** PENDING
