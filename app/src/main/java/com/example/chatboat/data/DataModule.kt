@@ -2,8 +2,10 @@ package com.example.chatboat.data
 
 import android.content.Context
 import com.example.chatboat.data.local.ChatDatabase
+import com.example.chatboat.data.remote.AuthApiService
 import com.example.chatboat.data.remote.GeminiApiService
 import com.example.chatboat.data.repository.ChatRepository
+import com.example.chatboat.data.auth.AuthRepository
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -36,8 +38,23 @@ object DataModule {
             .create(GeminiApiService::class.java)
     }
 
+    private fun provideAuthApiService(): AuthApiService {
+        val contentType = "application/json".toMediaType()
+        // Replace this with your REAL backend URL
+        return Retrofit.Builder()
+            .baseUrl("https://your-backend-api.com/") 
+            .client(provideOkHttpClient())
+            .addConverterFactory(json.asConverterFactory(contentType))
+            .build()
+            .create(AuthApiService::class.java)
+    }
+
     fun provideChatRepository(context: Context): ChatRepository {
         val database = ChatDatabase.getDatabase(context)
         return ChatRepository(database.chatDao(), provideGeminiApiService())
+    }
+
+    fun provideAuthRepository(): AuthRepository {
+        return AuthRepository(provideAuthApiService())
     }
 }
