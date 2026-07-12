@@ -36,7 +36,8 @@ app.post('/api/auth/send-code', async (req, res) => {
 
     try {
         if (provider === 'PHONE') {
-            if (twilioClient) {
+            if (process.env.TWILIO_SID) {
+                const twilioClient = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
                 await twilioClient.messages.create({
                     body: `Your chatBoat verification code is: ${code}`,
                     from: process.env.TWILIO_PHONE_NUMBER,
@@ -46,13 +47,17 @@ app.post('/api/auth/send-code', async (req, res) => {
                 console.log(`[MOCK SMS] Code ${code} sent to ${identifier}`);
             }
         } else {
-            // Default to Email for GOOGLE and APPLE
-            await transporter.sendMail({
-                from: `"chatBoat Auth" <${process.env.EMAIL_USER}>`,
-                to: identifier,
-                subject: "Your Verification Code",
-                text: `Your chatBoat verification code is: ${code}. It will expire in 10 minutes.`
-            });
+            // Only try to send email if user has configured it
+            if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+                await transporter.sendMail({
+                    from: `"chatBoat Auth" <${process.env.EMAIL_USER}>`,
+                    to: identifier,
+                    subject: "Your Verification Code",
+                    text: `Your chatBoat verification code is: ${code}. It will expire in 10 minutes.`
+                });
+            } else {
+                console.log(`[MOCK EMAIL] Code ${code} sent to ${identifier}`);
+            }
         }
 
         // Store code for verification (hashed in real app)
