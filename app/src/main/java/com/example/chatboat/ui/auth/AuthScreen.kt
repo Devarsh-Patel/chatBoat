@@ -2,7 +2,10 @@ package com.example.chatboat.ui.auth
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -165,12 +168,22 @@ fun InputIdentifierContent(
     onSubmit: (String) -> Unit
 ) {
     var identifier by remember { mutableStateOf("") }
+    var selectedCountry by remember { mutableStateOf(countries[0]) }
+    var showCountryPicker by remember { mutableStateOf(false) }
     
-    val (title, hint, keyboardType) = when (provider) {
-        AuthProvider.GOOGLE -> Triple("Google Login", "Enter your Gmail", KeyboardType.Email)
-        AuthProvider.APPLE -> Triple("Apple Login", "Enter your Apple-connected Email", KeyboardType.Email)
-        AuthProvider.PHONE -> Triple("Phone Login", "Enter your Phone Number", KeyboardType.Phone)
+    val title = when (provider) {
+        AuthProvider.GOOGLE -> "Google Login"
+        AuthProvider.APPLE -> "Apple Login"
+        AuthProvider.PHONE -> "Phone Login"
     }
+
+    val hint = when (provider) {
+        AuthProvider.GOOGLE -> "Enter your Gmail"
+        AuthProvider.APPLE -> "Enter your Apple-connected Email"
+        AuthProvider.PHONE -> "Phone Number"
+    }
+
+    val keyboardType = if (provider == AuthProvider.PHONE) KeyboardType.Phone else KeyboardType.Email
 
     Column(
         modifier = Modifier
@@ -189,16 +202,38 @@ fun InputIdentifierContent(
         
         Spacer(modifier = Modifier.height(32.dp))
 
-        OutlinedTextField(
-            value = identifier,
-            onValueChange = { identifier = it },
-            label = { Text(hint) },
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-            isError = error != null,
-            singleLine = true,
-            shape = MaterialTheme.shapes.large
-        )
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (provider == AuthProvider.PHONE) {
+                OutlinedCard(
+                    onClick = { showCountryPicker = true },
+                    modifier = Modifier
+                        .height(56.dp)
+                        .padding(end = 8.dp),
+                    shape = MaterialTheme.shapes.large
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxHeight().padding(horizontal = 12.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = "${selectedCountry.flag} ${selectedCountry.code}")
+                    }
+                }
+            }
+
+            OutlinedTextField(
+                value = identifier,
+                onValueChange = { identifier = it },
+                label = { Text(hint) },
+                modifier = Modifier.weight(1f),
+                keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+                isError = error != null,
+                singleLine = true,
+                shape = MaterialTheme.shapes.large
+            )
+        }
 
         if (error != null) {
             Text(
@@ -212,13 +247,47 @@ fun InputIdentifierContent(
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = { onSubmit(identifier) },
+            onClick = {
+                val fullIdentifier = if (provider == AuthProvider.PHONE) {
+                    "${selectedCountry.code}$identifier"
+                } else {
+                    identifier
+                }
+                onSubmit(fullIdentifier)
+            },
             modifier = Modifier.fillMaxWidth().height(56.dp),
             enabled = identifier.isNotBlank() && !isLoading,
             shape = MaterialTheme.shapes.extraLarge
         ) {
             Text("Send Code")
         }
+    }
+
+    if (showCountryPicker) {
+        AlertDialog(
+            onDismissRequest = { showCountryPicker = false },
+            title = { Text("Select Country") },
+            text = {
+                LazyColumn {
+                    items(countries) { country ->
+                        ListItem(
+                            headlineContent = { Text(country.name) },
+                            leadingContent = { Text(country.flag) },
+                            trailingContent = { Text(country.code) },
+                            modifier = Modifier.clickable {
+                                selectedCountry = country
+                                showCountryPicker = false
+                            }
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showCountryPicker = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 
