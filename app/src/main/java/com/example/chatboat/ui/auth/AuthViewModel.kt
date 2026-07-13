@@ -51,7 +51,8 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
             if (success) {
                 _uiState.value = AuthUiState.Verification(currentState.provider, identifier)
             } else {
-                _error.value = "Failed to send code. Please try again."
+                _error.value = "Failed to connect to backend. Please check your internet and if the server is running."
+                android.util.Log.e("chatBoat_Auth", "Verification code request failed")
             }
         }
     }

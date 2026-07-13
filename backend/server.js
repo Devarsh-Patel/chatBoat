@@ -14,13 +14,18 @@ const PORT = process.env.PORT || 3000;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 // Email Config (Example using Gmail - requires App Password)
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
+let transporter = null;
+if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS
+        }
+    });
+} else {
+    console.log("WARNING: Email credentials missing in .env. Email will be mocked.");
+}
 
 // SMS Config (Twilio)
 const twilioClient = process.env.TWILIO_SID ? twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN) : null;
@@ -31,8 +36,9 @@ const verificationCodes = new Map();
 // --- Auth Endpoints ---
 
 app.post('/api/auth/send-code', async (req, res) => {
+    console.log("--- Received Send Code Request ---");
+    console.log(req.body);
     const { provider, identifier, code } = req.body;
-    console.log(`Request to send code to ${identifier} via ${provider}`);
 
     try {
         if (provider === 'PHONE') {
@@ -99,6 +105,6 @@ app.post('/api/ai/chat', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`chatBoat Backend running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`chatBoat Backend running on http://0.0.0.0:${PORT}`);
 });

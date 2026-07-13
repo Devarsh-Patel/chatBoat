@@ -29,9 +29,9 @@ object DataModule {
 
     private fun provideBackendApiService(): BackendApiService {
         val contentType = "application/json".toMediaType()
-        // Replace this with your REAL backend URL (e.g., http://10.0.2.2:3000 for local emulator)
+        // Replace this with your REAL backend URL (e.g., http://10.0.2.2:8080 for local emulator)
         return Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:3000/") 
+            .baseUrl("http://10.0.2.2:8080/")
             .client(provideOkHttpClient())
             .addConverterFactory(json.asConverterFactory(contentType))
             .build()
