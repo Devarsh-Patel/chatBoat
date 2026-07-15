@@ -28,7 +28,12 @@ if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
 }
 
 // SMS Config (Twilio)
-const twilioClient = process.env.TWILIO_SID ? twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN) : null;
+let twilioClient = null;
+if (process.env.TWILIO_SID && process.env.TWILIO_SID.startsWith('AC')) {
+    twilioClient = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
+} else {
+    console.log("WARNING: Twilio SID is missing or invalid. SMS will be mocked.");
+}
 
 // Temporary in-memory store for verification codes (Use Redis for production)
 const verificationCodes = new Map();
