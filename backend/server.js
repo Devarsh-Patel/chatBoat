@@ -47,8 +47,7 @@ app.post('/api/auth/send-code', async (req, res) => {
 
     try {
         if (provider === 'PHONE') {
-            if (process.env.TWILIO_SID) {
-                const twilioClient = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
+            if (twilioClient) {
                 await twilioClient.messages.create({
                     body: `Your chatBoat verification code is: ${code}`,
                     from: process.env.TWILIO_PHONE_NUMBER,
@@ -59,7 +58,7 @@ app.post('/api/auth/send-code', async (req, res) => {
             }
         } else {
             // Only try to send email if user has configured it
-            if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+            if (transporter) {
                 await transporter.sendMail({
                     from: `"chatBoat Auth" <${process.env.EMAIL_USER}>`,
                     to: identifier,
