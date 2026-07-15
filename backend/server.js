@@ -60,10 +60,29 @@ app.post('/api/auth/send-code', async (req, res) => {
             // Only try to send email if user has configured it
             if (transporter) {
                 await transporter.sendMail({
-                    from: `"chatBoat Auth" <${process.env.EMAIL_USER}>`,
+                    from: `"chatBoat" <${process.env.EMAIL_USER}>`,
                     to: identifier,
-                    subject: "Your Verification Code",
-                    text: `Your chatBoat verification code is: ${code}. It will expire in 10 minutes.`
+                    subject: "Verification Code for chatBoat",
+                    html: `
+                        <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+                            <div style="text-align: center; margin-bottom: 20px;">
+                                <h1 style="color: #0B57D0; margin: 0;">chatBoat</h1>
+                                <p style="color: #666; font-size: 14px;">Your Intelligent AI Search Companion</p>
+                            </div>
+                            <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; text-align: center;">
+                                <p style="font-size: 16px; color: #333;">Hello,</p>
+                                <p style="font-size: 16px; color: #333;">Use the following verification code to access your chatBoat account:</p>
+                                <h2 style="font-size: 32px; letter-spacing: 5px; color: #0B57D0; margin: 20px 0;">${code}</h2>
+                                <p style="font-size: 14px; color: #888;">This code will expire in 10 minutes. If you didn't request this, please ignore this email.</p>
+                            </div>
+                            <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
+                            <div style="font-size: 12px; color: #999; text-align: center;">
+                                <p><strong>chatBoat AI Technologies Inc.</strong></p>
+                                <p>123 Innovation Drive, Silicon Valley, CA</p>
+                                <p>This is an automated message, please do not reply.</p>
+                            </div>
+                        </div>
+                    `
                 });
             } else {
                 console.log(`[MOCK EMAIL] Code ${code} sent to ${identifier}`);
