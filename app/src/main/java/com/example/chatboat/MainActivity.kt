@@ -41,9 +41,14 @@ class MainActivity : ComponentActivity() {
 fun ChatBoatApp() {
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
-    val isLoggedIn by sessionManager.isLoggedIn.collectAsState(initial = false)
+    val isLoggedIn by sessionManager.isLoggedIn.collectAsState(initial = null)
     
-    val backStack = rememberNavBackStack(if (isLoggedIn) NavRoute.Main else NavRoute.Auth)
+    if (isLoggedIn == null) {
+        // Prevent flickering while session is loading from DataStore
+        return
+    }
+
+    val backStack = rememberNavBackStack(if (isLoggedIn == true) NavRoute.Main else NavRoute.Auth)
     val chatViewModel: ChatViewModel = viewModel(factory = ChatViewModelFactory(context))
     val authViewModel: AuthViewModel = viewModel(factory = AuthViewModelFactory(DataModule.provideAuthRepository(), sessionManager))
 

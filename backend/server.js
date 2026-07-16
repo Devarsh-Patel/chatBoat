@@ -64,22 +64,26 @@ app.post('/api/auth/send-code', async (req, res) => {
                     to: identifier,
                     subject: "Verification Code for chatBoat",
                     html: `
-                        <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-                            <div style="text-align: center; margin-bottom: 20px;">
-                                <h1 style="color: #0B57D0; margin: 0;">chatBoat</h1>
-                                <p style="color: #666; font-size: 14px;">Your Intelligent AI Search Companion</p>
+                        <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: auto; padding: 40px; border: 1px solid #f0f0f0; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                            <div style="text-align: center; margin-bottom: 30px;">
+                                <div style="display: inline-block; width: 80px; height: 80px; background-color: #0B57D0; border-radius: 20px; line-height: 80px; margin-bottom: 15px; color: white; font-size: 40px; font-weight: bold;">cB</div>
+                                <h1 style="color: #0B57D0; margin: 0; font-size: 28px; letter-spacing: -0.5px;">chatBoat</h1>
+                                <p style="color: #5f6368; font-size: 14px; margin-top: 5px;">Intelligent AI Search Companion</p>
                             </div>
-                            <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; text-align: center;">
-                                <p style="font-size: 16px; color: #333;">Hello,</p>
-                                <p style="font-size: 16px; color: #333;">Use the following verification code to access your chatBoat account:</p>
-                                <h2 style="font-size: 32px; letter-spacing: 5px; color: #0B57D0; margin: 20px 0;">${code}</h2>
-                                <p style="font-size: 14px; color: #888;">This code will expire in 10 minutes. If you didn't request this, please ignore this email.</p>
+
+                            <div style="background-color: #f8f9fa; padding: 30px; border-radius: 12px; text-align: center; border: 1px solid #e8eaed;">
+                                <p style="font-size: 16px; color: #3c4043; margin-bottom: 20px;">Use the following verification code to access your account:</p>
+                                <div style="font-size: 42px; font-weight: bold; letter-spacing: 8px; color: #0B57D0; background: white; padding: 20px; border-radius: 8px; display: inline-block; border: 1px solid #dadce0;">
+                                    ${code}
+                                </div>
+                                <p style="font-size: 13px; color: #70757a; margin-top: 25px;">This code expires in 10 minutes. <br/>If you didn't request this, please ignore this email.</p>
                             </div>
-                            <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
-                            <div style="font-size: 12px; color: #999; text-align: center;">
-                                <p><strong>chatBoat AI Technologies Inc.</strong></p>
-                                <p>123 Innovation Drive, Silicon Valley, CA</p>
-                                <p>This is an automated message, please do not reply.</p>
+
+                            <div style="margin-top: 40px; padding-top: 30px; border-top: 1px solid #f0f0f0; color: #9aa0a6; font-size: 12px; text-align: center; line-height: 1.6;">
+                                <p style="margin: 0; font-weight: bold; color: #5f6368;">chatBoat AI Technologies Inc.</p>
+                                <p style="margin: 2px 0;">123 Innovation Drive, Silicon Valley, CA 94025</p>
+                                <p style="margin: 10px 0;">&copy; 2025 chatBoat. All rights reserved.</p>
+                                <p style="margin-top: 15px;">This is an automated security message. Please do not reply.</p>
                             </div>
                         </div>
                     `
