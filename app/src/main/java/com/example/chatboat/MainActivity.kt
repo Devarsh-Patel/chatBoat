@@ -5,6 +5,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -12,6 +15,7 @@ import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.example.chatboat.data.DataModule
+import com.example.chatboat.data.session.SessionManager
 import com.example.chatboat.ui.auth.AuthScreen
 import com.example.chatboat.ui.auth.AuthViewModel
 import com.example.chatboat.ui.auth.AuthViewModelFactory
@@ -35,10 +39,13 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun ChatBoatApp() {
-    val backStack = rememberNavBackStack(NavRoute.Auth)
     val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
+    val isLoggedIn by sessionManager.isLoggedIn.collectAsState(initial = false)
+    
+    val backStack = rememberNavBackStack(if (isLoggedIn) NavRoute.Main else NavRoute.Auth)
     val chatViewModel: ChatViewModel = viewModel(factory = ChatViewModelFactory(context))
-    val authViewModel: AuthViewModel = viewModel(factory = AuthViewModelFactory(DataModule.provideAuthRepository()))
+    val authViewModel: AuthViewModel = viewModel(factory = AuthViewModelFactory(DataModule.provideAuthRepository(), sessionManager))
 
     NavDisplay(
         backStack = backStack,
@@ -58,6 +65,7 @@ fun ChatBoatApp() {
                 NavRoute.Main -> NavEntry(key) {
                     MainScreen(
                         viewModel = chatViewModel,
+                        sessionManager = sessionManager,
                         onLogout = dropUnlessResumed {
                             backStack.removeAt(backStack.size - 1)
                             backStack.add(NavRoute.Auth)

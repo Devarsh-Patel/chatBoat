@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.chatboat.data.auth.AuthProvider
 import com.example.chatboat.data.auth.AuthRepository
+import com.example.chatboat.data.session.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,7 +17,10 @@ sealed interface AuthUiState {
     data object Success : AuthUiState
 }
 
-class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
+class AuthViewModel(
+    private val repository: AuthRepository,
+    private val sessionManager: SessionManager
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Landing)
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
@@ -67,6 +71,9 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
             _isLoading.value = false
             
             if (success) {
+                viewModelScope.launch {
+                    sessionManager.saveSession(currentState.identifier)
+                }
                 _uiState.value = AuthUiState.Success
             } else {
                 _error.value = "Invalid verification code."

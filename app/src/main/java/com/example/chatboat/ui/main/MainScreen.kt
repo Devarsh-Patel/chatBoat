@@ -47,12 +47,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.chatboat.data.local.ChatMessageEntity
 import com.example.chatboat.data.local.ChatSessionEntity
+import com.example.chatboat.data.session.SessionManager
 import com.example.chatboat.ui.chat.ChatViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun MainScreen(
     viewModel: ChatViewModel,
+    sessionManager: SessionManager,
     onLogout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -72,7 +74,12 @@ fun MainScreen(
                     IconButton(onClick = { viewModel.startNewChat("New Chat ${sessions.size + 1}") }) {
                         Icon(imageVector = Icons.Rounded.Add, contentDescription = "New Chat")
                     }
-                    IconButton(onClick = onLogout) {
+                    IconButton(onClick = {
+                        scope.launch {
+                            sessionManager.clearSession()
+                            onLogout()
+                        }
+                    }) {
                         Icon(imageVector = Icons.AutoMirrored.Rounded.Logout, contentDescription = "Logout")
                     }
                 }
