@@ -24,14 +24,17 @@ object DataModule {
         }
         return OkHttpClient.Builder()
             .addInterceptor(logging)
+            .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+            .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
             .build()
     }
 
     private fun provideBackendApiService(): BackendApiService {
         val contentType = "application/json".toMediaType()
-        // localhost works because of adb reverse tcp:8080 tcp:8080
+        // 10.0.2.2 is the special IP for Android Emulator to access host machine (your computer)
         return Retrofit.Builder()
-            .baseUrl("http://localhost:8080/")
+            .baseUrl("http://10.0.2.2:8080/")
             .client(provideOkHttpClient())
             .addConverterFactory(json.asConverterFactory(contentType))
             .build()
