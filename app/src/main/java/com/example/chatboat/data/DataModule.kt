@@ -29,9 +29,9 @@ object DataModule {
 
     private fun provideBackendApiService(): BackendApiService {
         val contentType = "application/json".toMediaType()
-        // 10.0.2.2 is the special IP for Android Emulator to access host machine
+        // localhost works because of adb reverse tcp:8080 tcp:8080
         return Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:8080/")
+            .baseUrl("http://localhost:8080/")
             .client(provideOkHttpClient())
             .addConverterFactory(json.asConverterFactory(contentType))
             .build()
