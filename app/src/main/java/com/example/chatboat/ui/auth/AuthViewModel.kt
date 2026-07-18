@@ -5,9 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.chatboat.data.auth.AuthProvider
 import com.example.chatboat.data.auth.AuthRepository
 import com.example.chatboat.data.session.SessionManager
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import com.example.chatboat.util.NetworkMonitor
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 sealed interface AuthUiState {
@@ -19,7 +18,8 @@ sealed interface AuthUiState {
 
 class AuthViewModel(
     private val repository: AuthRepository,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val networkMonitor: NetworkMonitor
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Landing)
@@ -30,6 +30,12 @@ class AuthViewModel(
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
+
+    val isOnline = networkMonitor.isOnline.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = true
+    )
 
     fun selectProvider(provider: AuthProvider) {
         _uiState.value = AuthUiState.InputIdentifier(provider)
@@ -47,6 +53,11 @@ class AuthViewModel(
         val currentState = _uiState.value as? AuthUiState.InputIdentifier ?: return
         
         viewModelScope.launch {
+            if (!isOnline.value) {
+                _error.value = "No internet connection. Please turn on Wi-Fi or Mobile Data."
+                return@launch
+            }
+
             _isLoading.value = true
             _error.value = null
             val success = repository.sendVerificationCode(currentState.provider, identifier)

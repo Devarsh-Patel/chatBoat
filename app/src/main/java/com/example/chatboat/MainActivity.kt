@@ -24,6 +24,7 @@ import com.example.chatboat.ui.chat.ChatViewModelFactory
 import com.example.chatboat.ui.main.MainScreen
 import com.example.chatboat.ui.navigation.NavRoute
 import com.example.chatboat.ui.theme.ChatBoatTheme
+import com.example.chatboat.util.NetworkMonitor
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,6 +42,7 @@ class MainActivity : ComponentActivity() {
 fun ChatBoatApp() {
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
+    val networkMonitor = remember { NetworkMonitor(context) }
     val isLoggedIn by sessionManager.isLoggedIn.collectAsState(initial = null)
     
     if (isLoggedIn == null) {
@@ -50,7 +52,7 @@ fun ChatBoatApp() {
 
     val backStack = rememberNavBackStack(if (isLoggedIn == true) NavRoute.Main else NavRoute.Auth)
     val chatViewModel: ChatViewModel = viewModel(factory = ChatViewModelFactory(context))
-    val authViewModel: AuthViewModel = viewModel(factory = AuthViewModelFactory(DataModule.provideAuthRepository(), sessionManager))
+    val authViewModel: AuthViewModel = viewModel(factory = AuthViewModelFactory(DataModule.provideAuthRepository(), sessionManager, networkMonitor))
 
     NavDisplay(
         backStack = backStack,

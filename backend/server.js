@@ -56,43 +56,62 @@ app.get('/health', (req, res) => {
 app.post('/api/auth/send-code', async (req, res) => {
     const { provider, identifier, code } = req.body;
 
+    if (!identifier || !code) {
+        return res.status(400).json({ success: false, message: "Missing identifier or code" });
+    }
+
     try {
         if (provider === 'PHONE') {
+            // Enhanced Phone Verification: Normalizing phone number (should start with +)
+            const phone = identifier.startsWith('+') ? identifier : `+${identifier}`;
+
             if (twilioClient) {
                 await twilioClient.messages.create({
                     body: `Your chatBoat verification code is: ${code}`,
                     from: process.env.TWILIO_PHONE_NUMBER,
-                    to: identifier
+                    to: phone
                 });
-                console.log(`REAL SMS sent to ${identifier}`);
+                console.log(`REAL SMS sent to ${phone}`);
             } else {
                 console.log(`\n*****************************************`);
-                console.log(`[MOCK SMS] FOR: ${identifier}`);
+                console.log(`[MOCK SMS] TO: ${phone}`);
                 console.log(`[MOCK SMS] CODE: ${code}`);
                 console.log(`*****************************************\n`);
             }
         } else {
+            // Email Verification (Google / Apple)
             if (transporter) {
                 await transporter.sendMail({
                     from: `"chatBoat" <${process.env.EMAIL_USER}>`,
                     to: identifier,
                     subject: "Verification Code for chatBoat",
                     html: `
-                        <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 40px; border: 1px solid #f0f0f0; border-radius: 12px;">
-                            <h1 style="color: #0B57D0; text-align: center;">chatBoat</h1>
-                            <div style="background-color: #f8f9fa; padding: 30px; border-radius: 12px; text-align: center;">
-                                <p style="font-size: 16px;">Your verification code is:</p>
-                                <h2 style="font-size: 42px; letter-spacing: 10px; color: #0B57D0;">${code}</h2>
-                                <p style="font-size: 13px; color: #70757a;">Valid for 10 minutes.</p>
+                        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: auto; padding: 40px; border: 1px solid #e0e0e0; border-radius: 16px; background-color: white;">
+                            <div style="text-align: center; margin-bottom: 32px;">
+                                <div style="display: inline-block; width: 64px; height: 64px; background-color: #0B57D0; border-radius: 16px; color: white; font-size: 32px; font-weight: bold; line-height: 64px; margin-bottom: 12px;">cB</div>
+                                <h1 style="color: #1a1a1a; margin: 0; font-size: 24px;">Verify your identity</h1>
+                                <p style="color: #666; font-size: 14px; margin-top: 4px;">Security code for your chatBoat account</p>
                             </div>
-                            <p style="text-align: center; color: #9aa0a6; font-size: 12px; margin-top: 30px;">chatBoat AI Technologies Inc.</p>
+
+                            <div style="background-color: #f8f9fa; padding: 32px; border-radius: 12px; text-align: center; border: 1px solid #f1f3f4;">
+                                <p style="font-size: 16px; color: #3c4043; margin-bottom: 24px;">Enter this code in the app to continue:</p>
+                                <div style="font-size: 48px; font-weight: 700; letter-spacing: 12px; color: #0B57D0; font-family: monospace;">
+                                    ${code}
+                                </div>
+                                <p style="font-size: 12px; color: #5f6368; margin-top: 32px;">This code will expire in 10 minutes for your security.</p>
+                            </div>
+
+                            <div style="margin-top: 40px; text-align: center; border-top: 1px solid #eeeeee; padding-top: 24px;">
+                                <p style="font-size: 12px; color: #999; margin: 0;"><strong>chatBoat AI Technologies</strong></p>
+                                <p style="font-size: 11px; color: #999; margin: 4px 0;">If you did not request this code, you can safely ignore this email.</p>
+                            </div>
                         </div>
                     `
                 });
                 console.log(`REAL Email sent to ${identifier}`);
             } else {
                 console.log(`\n*****************************************`);
-                console.log(`[MOCK EMAIL] FOR: ${identifier}`);
+                console.log(`[MOCK EMAIL] TO: ${identifier}`);
                 console.log(`[MOCK EMAIL] CODE: ${code}`);
                 console.log(`*****************************************\n`);
             }
