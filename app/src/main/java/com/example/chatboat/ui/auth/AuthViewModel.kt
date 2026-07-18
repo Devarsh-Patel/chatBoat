@@ -55,8 +55,8 @@ class AuthViewModel(
             if (success) {
                 _uiState.value = AuthUiState.Verification(currentState.provider, identifier)
             } else {
-                _error.value = "Failed to connect to backend. Please check your internet and if the server is running."
-                android.util.Log.e("chatBoat_Auth", "Verification code request failed")
+                _error.value = "Unable to reach the server. Please ensure the backend is running and you are connected to the internet."
+                android.util.Log.e("chatBoat_Auth", "Failed to send code to $identifier")
             }
         }
     }

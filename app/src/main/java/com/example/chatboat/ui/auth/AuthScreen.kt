@@ -264,27 +264,43 @@ fun InputIdentifierContent(
     }
 
     if (showCountryPicker) {
+        var searchQuery by remember { mutableStateOf("") }
+        val filteredCountries = countries.filter {
+            it.name.contains(searchQuery, ignoreCase = true) || it.code.contains(searchQuery)
+        }
+
         AlertDialog(
             onDismissRequest = { showCountryPicker = false },
             title = { Text("Select Country") },
             text = {
-                LazyColumn {
-                    items(countries) { country ->
-                        ListItem(
-                            headlineContent = { Text(country.name) },
-                            leadingContent = { Text(country.flag) },
-                            trailingContent = { Text(country.code) },
-                            modifier = Modifier.clickable {
-                                selectedCountry = country
-                                showCountryPicker = false
-                            }
-                        )
+                Column {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                        placeholder = { Text("Search country...") },
+                        leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
+                        singleLine = true,
+                        shape = MaterialTheme.shapes.medium
+                    )
+                    LazyColumn(modifier = Modifier.heightIn(max = 400.dp)) {
+                        items(filteredCountries) { country ->
+                            ListItem(
+                                headlineContent = { Text(country.name) },
+                                leadingContent = { Text(country.flag) },
+                                trailingContent = { Text(country.code) },
+                                modifier = Modifier.clickable {
+                                    selectedCountry = country
+                                    showCountryPicker = false
+                                }
+                            )
+                        }
                     }
                 }
             },
             confirmButton = {
                 TextButton(onClick = { showCountryPicker = false }) {
-                    Text("Cancel")
+                    Text("Close")
                 }
             }
         )
