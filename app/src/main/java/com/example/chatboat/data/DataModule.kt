@@ -33,9 +33,10 @@ object DataModule {
 
     private fun provideBackendApiService(): BackendApiService {
         val contentType = "application/json".toMediaType()
-        // 10.0.2.2 is the special IP for Android Emulator to access host machine (your computer)
+        // Use the IP address of your host machine (192.0.0.2)
+        // or the special loopback IP for emulators (10.0.2.2)
         return Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:8080/")
+            .baseUrl("http://192.0.0.2:8080/")
             .client(provideOkHttpClient())
             .addConverterFactory(json.asConverterFactory(contentType))
             .build()
